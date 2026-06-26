@@ -30,9 +30,9 @@ function normalizarPonto(p) {
     horaFuncionamento: p.horaFuncionamento,
     telefone: p.telefone,
     descricao: p.descricao,
-    lat: p.latitude,
-    lng: p.longitude,
-    temCoordenadas: typeof p.latitude === 'number' && typeof p.longitude === 'number',
+    lat: parseFloat(p.latitude),
+    lng: parseFloat(p.longitude),
+    temCoordenadas: p.latitude != null && p.longitude != null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude)),
   };
 }
 
