@@ -30,9 +30,9 @@ function normalizarPonto(p) {
     horaFuncionamento: p.horaFuncionamento,
     telefone: p.telefone,
     descricao: p.descricao,
-    lat: parseFloat(p.latitude),
-    lng: parseFloat(p.longitude),
-    temCoordenadas: p.latitude != null && p.longitude != null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude)),
+    lat: p.latitude,
+    lng: p.longitude,
+    temCoordenadas: typeof p.latitude === 'number' && typeof p.longitude === 'number',
   };
 }
 
@@ -41,21 +41,34 @@ export function PontosProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
 
-  const carregar = useCallback(async () => {
-    setLoading(true);
-    setErro(null);
+  // silencioso=true não mostra o spinner de carregamento — usado nas
+  // atualizações automáticas em segundo plano, pra não "piscar" a tela.
+  const carregar = useCallback(async (silencioso = false) => {
+    if (!silencioso) setLoading(true);
+    if (!silencioso) setErro(null);
     try {
       const dados = await apiService.listarPontos();
       setPontos(dados.map(normalizarPonto));
+      if (!silencioso) setErro(null);
     } catch (e) {
-      setErro(e.message || 'Não foi possível carregar os pontos de coleta.');
+      if (!silencioso) setErro(e.message || 'Não foi possível carregar os pontos de coleta.');
     } finally {
-      setLoading(false);
+      if (!silencioso) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     carregar();
+  }, [carregar]);
+
+  // Atualização automática: busca a lista de novo a cada 15 segundos,
+  // enquanto o app estiver aberto — sem precisar trocar de aba ou puxar
+  // pra atualizar. Importante para demonstrações ao vivo.
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      carregar(true);
+    }, 15000);
+    return () => clearInterval(intervalo);
   }, [carregar]);
 
   return (
