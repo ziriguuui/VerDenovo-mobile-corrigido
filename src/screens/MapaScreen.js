@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Image, Linking, Animated, ActivityIndicator, ScrollView,
 } from 'react-native';
 import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme';
 import { usePontos } from '../context/PontosContext';
@@ -46,6 +47,15 @@ export default function MapaScreen({ navigation }) {
       setLoadingLoc(false);
     })();
   }, []);
+
+  // Busca a lista de pontos de novo sempre que o usuário entra nessa aba —
+  // assim, um ponto cadastrado no site (ou por outra pessoa) aparece aqui
+  // sem precisar fechar e abrir o app.
+  useFocusEffect(
+    useCallback(() => {
+      recarregar();
+    }, [recarregar])
+  );
 
   const pontosFiltrados = filtro === 'Todos' ? pontos : pontos.filter(p => p.tipo === filtro);
 
@@ -92,7 +102,9 @@ export default function MapaScreen({ navigation }) {
             <Image source={require('../../assets/Verdenovologo.png')} style={styles.logoImg} resizeMode="contain" />
             <Text style={styles.logoText}>VerDeNovo</Text>
           </View>
-          <View style={{ width: 40 }} />
+          <TouchableOpacity style={styles.menuBtn} onPress={recarregar} disabled={carregandoPontos}>
+            <Ionicons name="refresh" size={22} color={colors.white} />
+          </TouchableOpacity>
         </View>
 
         {/* Filtros */}

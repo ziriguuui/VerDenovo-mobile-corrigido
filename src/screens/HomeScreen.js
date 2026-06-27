@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme';
 import { usePontos } from '../context/PontosContext';
 
@@ -103,11 +104,20 @@ function AnimatedCard({ children, delay, style }) {
 }
 
 export default function HomeScreen({ navigation }) {
-  const { pontos: todosPontos } = usePontos();
+  const { pontos: todosPontos, recarregar } = usePontos();
   const headerFade  = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-20)).current;
   const [pontoProximo, setPontoProximo] = useState(null);
   const [distKm, setDistKm] = useState(null);
+
+  // Busca a lista de pontos de novo sempre que o usuário entra na tela
+  // Início — assim, um ponto cadastrado no site aparece aqui sem precisar
+  // fechar e abrir o app.
+  useFocusEffect(
+    useCallback(() => {
+      recarregar();
+    }, [recarregar])
+  );
 
   useEffect(() => {
     Animated.parallel([
